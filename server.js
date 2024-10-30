@@ -1,3 +1,8 @@
+/**
+ * @file server.js
+ * @brief Node.js server with user registration, login, and password reset functionality.
+*/
+
 const express = require('express');
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -13,6 +18,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const JSON_FILE_PATH = path.join(__dirname, 'avagen.json');
 
+/**
+ * @brief Reads user data from the JSON file.
+ * @return Object containing user data. If file doesn't exist, returns an object with an empty users array.
+*/
 function readDataFromFile() {
     if (fs.existsSync(JSON_FILE_PATH)) {
         const data = fs.readFileSync(JSON_FILE_PATH, 'utf8');
@@ -22,11 +31,24 @@ function readDataFromFile() {
     }
 }
 
+/**
+ * @brief Writes data to the JSON file.
+ * @param data The user data to be written to the JSON file.
+*/
 function writeDataToFile(data) {
     const jsonData = JSON.stringify(data, null, 2);
     fs.writeFileSync(JSON_FILE_PATH, jsonData);
 }
 
+
+/**
+ * @brief Registers a new user by storing a hashed password and user details.
+ * 
+ * @param req Request object containing `username`, `password`, and `name` in the body.
+ * @param res Response object indicating the success or failure of the registration.
+ * 
+ * @note If the user already exists, it returns a 401 status else it returns a 200 status.
+*/
 app.post('/register', (req, res) => {
     const { username, password, name } = req.body;
 
@@ -48,6 +70,14 @@ app.post('/register', (req, res) => {
     }
 });
 
+/**
+ * @brief Logs in an existing user by comparing username, hashed password, and name.
+ * 
+ * @param req Request object containing `username`, `password`, and `name` in the body.
+ * @param res Response object indicating the success or failure of the login.
+ * 
+ * @note If credentials are incorrect, it returns a 401 status else it returns a 200 status.
+*/
 app.post('/login', (req, res) => {
     const { username, password, name } = req.body;
 
@@ -75,6 +105,14 @@ app.post('/login', (req, res) => {
 
 });
 
+/**
+ * @brief Resets the password for an existing user by updating the hashed password.
+ * 
+ * @param req Request object containing `username`, `password`, and `name` in the body.
+ * @param res Response object indicating the success or failure of the password reset.
+ * 
+ * @note If the user does not exist, it returns a 401 status else if the password is reset successfuly it returns a 200 status.
+*/
 app.post('/forgetPassword', (req, res) => {
     const { username, password, name } = req.body;
 
@@ -95,6 +133,11 @@ app.post('/forgetPassword', (req, res) => {
     }
 });
 
+/**
+ * @brief Starts the server on a specified port.
+ * 
+ * @note Logs a message indicating the port on which the server is running.
+*/
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
