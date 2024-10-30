@@ -3,6 +3,7 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -37,7 +38,8 @@ app.post('/register', (req, res) => {
         console.log('User already exists');
         res.status(401).send('User already exists');
     } else {
-        idData.users.push({ username, password, name });
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        idData.users.push({ username, password: hashedPassword, name });
 
         writeDataToFile(idData);
 
@@ -51,9 +53,19 @@ app.post('/login', (req, res) => {
 
     let idData = readDataFromFile();
 
-    const user = idData.users.find(user => user.username === username && user.password === password && user.name === name);
+    let userExists = false;
+    for (const user of idData.users) {
+        const passwordMatch = bcrypt.compareSync(password, user.password)
 
-    if (user) {
+        if (user.username === username && passwordMatch && user.name === name) {
+            userExists = true;
+            break;
+        } else {
+            userExists = false;
+        }
+    }
+
+    if (userExists) {
         console.log('Login successful!');
         res.sendStatus(200);
     } else {
@@ -61,6 +73,26 @@ app.post('/login', (req, res) => {
         res.status(401).send('Invalid username or password');
     }
 
+});
+
+app.post('/forgetPassword', (req, res) => {
+    const { username, password, name } = req.body;
+
+    let idData = readDataFromFile();
+
+    const user = idData.users.find(user => user.username === username && user.name === name);
+
+    if (user) {
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        user.password = hashedPassword;
+        writeDataToFile(idData);
+        
+        console.log('Password reset successful!');
+        res.sendStatus(200);
+    } else {
+        console.log('User does not exist');
+        res.status(401).send('User does not exist');
+    }
 });
 
 app.listen(port, () => {
