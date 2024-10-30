@@ -75,6 +75,26 @@ app.post('/login', (req, res) => {
 
 });
 
+app.post('/forgetPassword', (req, res) => {
+    const { username, password, name } = req.body;
+
+    let idData = readDataFromFile();
+
+    const user = idData.users.find(user => user.username === username && user.name === name);
+
+    if (user) {
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        user.password = hashedPassword;
+        writeDataToFile(idData);
+        
+        console.log('Password reset successful!');
+        res.sendStatus(200);
+    } else {
+        console.log('User does not exist');
+        res.status(401).send('User does not exist');
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
