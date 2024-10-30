@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const JSON_FILE_PATH = path.join(__dirname, 'ffxiv.json');
+const JSON_FILE_PATH = path.join(__dirname, 'avagen.json');
 
 function readDataFromFile() {
     if (fs.existsSync(JSON_FILE_PATH)) {
@@ -29,24 +29,29 @@ function writeDataToFile(data) {
 app.post('/register', (req, res) => {
     const { username, password, name } = req.body;
 
-    console.log(`Username: ${username} Password: ${password} Name: ${name}`);
-    let ffxivData = readDataFromFile();
+    let idData = readDataFromFile();
 
-    ffxivData.users.push({ username, password, name });
+    const userExists = idData.users.find(user => user.username === username && user.name === name);
 
-    writeDataToFile(ffxivData);
+    if (userExists) {
+        console.log('User already exists');
+        res.status(401).send('User already exists');
+    } else {
+        idData.users.push({ username, password, name });
 
-    console.log('User registered');
-    res.sendStatus(200);
+        writeDataToFile(idData);
+
+        console.log('User registered');
+        res.sendStatus(200);
+    }
 });
 
 app.post('/login', (req, res) => {
     const { username, password, name } = req.body;
 
-    console.log(`Username: ${username} Password: ${password} Name: ${name}`);
-    let ffxivData = readDataFromFile();
+    let idData = readDataFromFile();
 
-    const user = ffxivData.users.find(user => user.username === username && user.password === password);
+    const user = idData.users.find(user => user.username === username && user.password === password && user.name === name);
 
     if (user) {
         console.log('Login successful!');
